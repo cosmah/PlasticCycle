@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Household;
 
 use App\Http\Controllers\Controller;
+use App\Models\PickupRequest;
+use App\Models\RecyclingRecord;
+use App\Models\Reward;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -10,7 +13,16 @@ class HouseholdDashboardController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Household/Dashboard');
+        $user = auth()->user();
+        $recentPickups = $user->pickupRequests()->latest()->take(5)->get();
+        $totalRecycled = $user->recyclingRecords()->sum('quantity');
+        $totalPoints = $user->rewards()->whereNull('redeemed_at')->sum('points');
+
+        return Inertia::render('Household/Dashboard', [
+            'recentPickups' => $recentPickups,
+            'totalRecycled' => $totalRecycled,
+            'totalPoints' => $totalPoints,
+        ]);
     }
 
     public function schedule()
@@ -18,13 +30,73 @@ class HouseholdDashboardController extends Controller
         return Inertia::render('Household/Schedule');
     }
 
+    public function storeSchedule(Request $request)
+    {
+        $request->validate([
+            'plastic_type' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'scheduled_at' => 'required|date|after:now',
+        ]);
+
+        $pickup = PickupRequest::create([
+            'user_id' => auth()->id(),
+            'plastic_type' => $request->plastic_type,
+            'quantity' => $request->quantity,
+            'scheduled_at' => $request->scheduled_at,
+            'status' => 'scheduled',
+        ]);
+
+        // Award points (e.g., 10 points per kg)
+        Reward::create([
+            'user_id' => auth()->id(),
+            'points' => $request->quantity * 10,
+            'description' => "Pickup scheduled for {$request->quantity} kg of {$request->plastic_type}",
+        ]);
+
+        return redirect()->route('household.dashboard')->with('success', 'Pickup scheduled successfully!');
+    }
+
     public function rewards()
     {
-        return Inertia::render('Household/Rewards');
+        $user = auth()->user();
+        $rewards = $user->rewards()->latest()->get();
+        $availablePoints = $user->rewards()->whereNull('redeemed_at')->sum('points');
+
+        return Inertia::render('Household/Rewards', [
+            'rewards' => $rewards,
+            'availablePoints' => $availablePoints,
+        ]);
+    }
+
+    public function redeemRewards(Request $request)
+    {
+        $request->validate([
+            'points' => 'required|integer|min:1',
+        ]);
+
+        $user = auth()->user();
+        $availablePoints = $user->rewards()->whereNull('redeemed_at')->sum('points');
+
+        if ($request->points > $availablePoints) {
+            return back()->withErrors(['points' => 'Not enough points to redeem.']);
+        }
+
+        $user->rewards()->whereNull('redeemed_at')->take($request->points / 10)->update([
+            'redeemed_at' => now(),
+        ]);
+
+        return redirect()->route('household.rewards')->with('success', 'Points redeemed successfully!');
     }
 
     public function recycling()
     {
-        return Inertia::render('Household/Recycling');
+        $user = auth()->user();
+        $records = $user->recyclingRecords()->with('pickupRequest')->latest()->get();
+        $totalImpact = $user->recyclingRecords()->sum('quantity');
+
+        return Inertia::render('Household/Recycling', [
+            'records' => $records,
+            'totalImpact' => $totalImpact,
+        ]);
     }
 }

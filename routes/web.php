@@ -35,7 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('household')->name('household.')->group(function () {
         Route::get('/dashboard', [HouseholdDashboardController::class, 'index'])->name('dashboard');
         Route::get('/schedule', [HouseholdDashboardController::class, 'schedule'])->name('schedule');
+        Route::post('/schedule', [HouseholdDashboardController::class, 'storeSchedule'])->name('schedule.store');
         Route::get('/rewards', [HouseholdDashboardController::class, 'rewards'])->name('rewards');
+        Route::post('/rewards/redeem', [HouseholdDashboardController::class, 'redeemRewards'])->name('rewards.redeem');
         Route::get('/recycling', [HouseholdDashboardController::class, 'recycling'])->name('recycling');
     });
 });
