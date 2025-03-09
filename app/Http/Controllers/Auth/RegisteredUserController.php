@@ -35,22 +35,24 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'type' => 'required|in:household,business,collector', // Validate the type
+            'type' => 'required|in:household,business,collector',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'type' => $request->type, // Store the type
+            'type' => $request->type,
         ]);
 
         event(new Registered($user));
-
         Auth::login($user);
 
-        return to_route('dashboard');
+        // Redirect based on user type
+        return $request->type === 'collector'
+            ? to_route('collector.dashboard')
+            : to_route('dashboard');
     }
 }
