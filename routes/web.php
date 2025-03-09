@@ -27,7 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('business')->name('business.')->group(function () {
         Route::get('/dashboard', [BusinessDashboardController::class, 'index'])->name('dashboard');
         Route::get('/waste', [BusinessDashboardController::class, 'waste'])->name('waste');
+        Route::post('/waste', [BusinessDashboardController::class, 'storeWaste'])->name('waste.store');
         Route::get('/reports', [BusinessDashboardController::class, 'reports'])->name('reports');
+        Route::post('/reports/generate', [BusinessDashboardController::class, 'generateReport'])->name('reports.generate');
         Route::get('/analytics', [BusinessDashboardController::class, 'analytics'])->name('analytics');
     });
 

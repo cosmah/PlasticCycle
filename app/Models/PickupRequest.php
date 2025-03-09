@@ -15,6 +15,7 @@ class PickupRequest extends Model
         'quantity',
         'status',
         'scheduled_at',
+        'compliance_notes', // Added for businesses
     ];
 
     protected $casts = [
@@ -24,5 +25,10 @@ class PickupRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function recyclingRecord()
+    {
+        return $this->hasOne(RecyclingRecord::class);
     }
 }
