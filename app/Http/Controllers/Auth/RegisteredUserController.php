@@ -47,8 +47,10 @@ class RegisteredUserController extends Controller
             return to_route('collector.dashboard');
         } elseif ($request->type === 'business') {
             return to_route('business.dashboard');
+        } elseif ($request->type === 'household') {
+            return to_route('household.dashboard');
         } else {
-            return to_route('dashboard');
+            return to_route('dashboard'); // Fallback
         }
     }
 }

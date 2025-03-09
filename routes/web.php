@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Collector\CollectorDashboardController;
 use App\Http\Controllers\Business\BusinessDashboardController;
+use App\Http\Controllers\Household\HouseholdDashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -28,6 +29,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/waste', [BusinessDashboardController::class, 'waste'])->name('waste');
         Route::get('/reports', [BusinessDashboardController::class, 'reports'])->name('reports');
         Route::get('/analytics', [BusinessDashboardController::class, 'analytics'])->name('analytics');
+    });
+
+    // Household-specific routes
+    Route::prefix('household')->name('household.')->group(function () {
+        Route::get('/dashboard', [HouseholdDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/schedule', [HouseholdDashboardController::class, 'schedule'])->name('schedule');
+        Route::get('/rewards', [HouseholdDashboardController::class, 'rewards'])->name('rewards');
+        Route::get('/recycling', [HouseholdDashboardController::class, 'recycling'])->name('recycling');
     });
 });
 

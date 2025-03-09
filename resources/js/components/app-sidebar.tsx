@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle, Building, FileText, BarChart } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle, Building, FileText, BarChart, Home, Calendar, Gift } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Collector-specific navigation items
@@ -63,7 +63,31 @@ const businessNavItems: NavItem[] = [
     },
 ];
 
-// Default navigation items (e.g., for households)
+// Household-specific navigation items
+const householdNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        url: '/household/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Schedule Pickup',
+        url: '/household/schedule',
+        icon: Calendar,
+    },
+    {
+        title: 'Rewards',
+        url: '/household/rewards',
+        icon: Gift,
+    },
+    {
+        title: 'My Recycling',
+        url: '/household/recycling',
+        icon: Home,
+    },
+];
+
+// Default navigation items (fallback if type is unrecognized)
 const defaultNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -96,6 +120,8 @@ export function AppSidebar() {
             ? collectorNavItems
             : userType === 'business'
             ? businessNavItems
+            : userType === 'household'
+            ? householdNavItems
             : defaultNavItems;
 
     // Determine the home URL based on user type
@@ -104,6 +130,8 @@ export function AppSidebar() {
             ? '/collector/dashboard'
             : userType === 'business'
             ? '/business/dashboard'
+            : userType === 'household'
+            ? '/household/dashboard'
             : '/dashboard';
 
     return (
