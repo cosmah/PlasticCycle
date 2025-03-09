@@ -1,3 +1,4 @@
+<!-- filepath: /home/cosmah/projects/recyclers/resources/views/reports/business.blade.php -->
 <!DOCTYPE html>
 <html>
 <head>

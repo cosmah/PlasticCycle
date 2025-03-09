@@ -79,7 +79,12 @@ class BusinessDashboardController extends Controller
             'generatedAt' => now()->toDateTimeString(),
         ]);
 
-        return $pdf->download('recycling_report_' . $user->id . '_' . now()->format('Ymd') . '.pdf');
+        // Ensure the PDF is downloaded as a file, not displayed in browser
+        $filename = 'recycling_report_' . $user->id . '_' . now()->format('Ymd') . '.pdf';
+
+        // If using Inertia, we need to directly return the file response
+        // rather than going through the Inertia response cycle
+        return $pdf->stream($filename);
     }
 
     public function analytics()

@@ -3,7 +3,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from 'react';
+import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal, useEffect } from 'react';
 
 interface Record {
     id: Key | null | undefined;
@@ -19,13 +19,34 @@ interface BusinessReportsProps {
 }
 
 export default function BusinessReports({ records }: BusinessReportsProps) {
-    const { post, processing } = useForm();
+    const { processing, setData, data } = useForm();
 
     const generateReport = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
-        post(route('business.reports.generate'), {
-            preserveState: false, // Force a download response
-        });
+        
+        // Create a hidden form to submit a direct request instead of using Inertia
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = route('business.reports.generate');
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+        }
+        
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(form);
+        }, 1000);
     };
 
     return (
