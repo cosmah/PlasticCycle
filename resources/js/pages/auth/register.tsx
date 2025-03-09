@@ -14,14 +14,17 @@ type RegisterForm = {
     email: string;
     password: string;
     password_confirmation: string;
+    type: string; // Add type to the form data
 };
 
-export default function Register() {
+// Accept the type prop from the controller
+export default function Register({ type = 'household' }) {
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        type: type, // Initialize with the passed type
     });
 
     const submit: FormEventHandler = (e) => {
@@ -31,8 +34,14 @@ export default function Register() {
         });
     };
 
+    // Capitalize the type for display (e.g., "Household" instead of "household")
+    const displayType = type.charAt(0).toUpperCase() + type.slice(1);
+
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout
+            title={`Create a ${displayType} Account`}
+            description={`Enter your details below to create your ${type} account`}
+        >
             <Head title="Register" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
@@ -100,6 +109,9 @@ export default function Register() {
                         />
                         <InputError message={errors.password_confirmation} />
                     </div>
+
+                    {/* Hidden input for type (optional, since useForm includes it in the POST data) */}
+                    <input type="hidden" name="type" value={data.type} />
 
                     <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}

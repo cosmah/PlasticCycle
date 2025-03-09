@@ -226,19 +226,19 @@ export default function Welcome() {
                         </div>
                         <div className="flex flex-col md:flex-row justify-center gap-4">
                             <Link
-                                href={route('register')}
+                                href={route('register') + '?type=household'}
                                 className="inline-block rounded-md bg-blue-600 px-6 py-3 text-md font-medium text-white hover:bg-blue-700 transition-colors text-center"
                             >
                                 Register as a Household
                             </Link>
                             <Link
-                                href={route('register')}
+                                href={route('register') + '?type=business'}
                                 className="inline-block rounded-md bg-teal-600 px-6 py-3 text-md font-medium text-white hover:bg-teal-700 transition-colors text-center"
                             >
                                 Register as a Business
                             </Link>
                             <Link
-                                href={route('register')}
+                                href={route('register') + '?type=collector'}
                                 className="inline-block rounded-md bg-purple-600 px-6 py-3 text-md font-medium text-white hover:bg-purple-700 transition-colors text-center"
                             >
                                 Join as a Collector/Recycler

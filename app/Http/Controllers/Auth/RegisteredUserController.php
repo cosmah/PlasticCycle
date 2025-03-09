@@ -18,9 +18,12 @@ class RegisteredUserController extends Controller
     /**
      * Show the registration page.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('auth/register');
+        $type = $request->query('type', 'household'); // Default to 'household' if no type is provided
+        return Inertia::render('auth/register', [
+            'type' => $type, // Pass the type to the frontend
+        ]);
     }
 
     /**
@@ -34,12 +37,14 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'type' => 'required|in:household,business,collector', // Validate the type
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'type' => $request->type, // Store the type
         ]);
 
         event(new Registered($user));
