@@ -15,27 +15,19 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Show the registration page.
-     */
     public function create(Request $request): Response
     {
-        $type = $request->query('type', 'household'); // Default to 'household' if no type is provided
+        $type = $request->query('type', 'household');
         return Inertia::render('auth/register', [
-            'type' => $type, // Pass the type to the frontend
+            'type' => $type,
         ]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'type' => 'required|in:household,business,collector',
         ]);
@@ -51,8 +43,12 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // Redirect based on user type
-        return $request->type === 'collector'
-            ? to_route('collector.dashboard')
-            : to_route('dashboard');
+        if ($request->type === 'collector') {
+            return to_route('collector.dashboard');
+        } elseif ($request->type === 'business') {
+            return to_route('business.dashboard');
+        } else {
+            return to_route('dashboard');
+        }
     }
 }

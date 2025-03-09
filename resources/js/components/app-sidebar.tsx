@@ -12,10 +12,10 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle, Building, FileText, BarChart } from 'lucide-react';
 import AppLogo from './app-logo';
 
-// Define collector-specific navigation items
+// Collector-specific navigation items
 const collectorNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -39,7 +39,31 @@ const collectorNavItems: NavItem[] = [
     },
 ];
 
-// Default navigation items (e.g., for households or businesses, can be expanded later)
+// Business-specific navigation items
+const businessNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        url: '/business/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Waste Management',
+        url: '/business/waste',
+        icon: Building,
+    },
+    {
+        title: 'Reports',
+        url: '/business/reports',
+        icon: FileText,
+    },
+    {
+        title: 'Analytics',
+        url: '/business/analytics',
+        icon: BarChart,
+    },
+];
+
+// Default navigation items (e.g., for households)
 const defaultNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -63,11 +87,24 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     // Access the authenticated user from Inertia's usePage hook
-    const { auth } = usePage().props as unknown as { auth: { user?: { type?: string } } };
+    const { auth } = usePage<{ auth: { user?: { type?: string } } }>().props;
     const userType = auth.user?.type || 'household'; // Default to 'household' if no type
 
     // Select navigation items based on user type
-    const mainNavItems = userType === 'collector' ? collectorNavItems : defaultNavItems;
+    const mainNavItems =
+        userType === 'collector'
+            ? collectorNavItems
+            : userType === 'business'
+            ? businessNavItems
+            : defaultNavItems;
+
+    // Determine the home URL based on user type
+    const homeUrl =
+        userType === 'collector'
+            ? '/collector/dashboard'
+            : userType === 'business'
+            ? '/business/dashboard'
+            : '/dashboard';
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -75,7 +112,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={userType === 'collector' ? '/collector/dashboard' : '/dashboard'} prefetch>
+                            <Link href={homeUrl} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
