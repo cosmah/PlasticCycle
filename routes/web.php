@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports', [BusinessDashboardController::class, 'reports'])->name('reports');
         Route::post('/reports/generate', [BusinessDashboardController::class, 'generateReport'])->name('reports.generate');
         Route::get('/analytics', [BusinessDashboardController::class, 'analytics'])->name('analytics');
+        Route::get('/notifications', [BusinessDashboardController::class, 'notifications'])->name('notifications');
     });
 
     // Household-specific routes
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rewards', [HouseholdDashboardController::class, 'rewards'])->name('rewards');
         Route::post('/rewards/redeem', [HouseholdDashboardController::class, 'redeemRewards'])->name('rewards.redeem');
         Route::get('/recycling', [HouseholdDashboardController::class, 'recycling'])->name('recycling');
+        Route::get('/notifications', [HouseholdDashboardController::class, 'notifications'])->name('notifications');
     });
 });
 

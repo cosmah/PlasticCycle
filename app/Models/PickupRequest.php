@@ -11,16 +11,20 @@ class PickupRequest extends Model
 
     protected $fillable = [
         'user_id',
-        'collector_id', // Added
+        'collector_id',
         'plastic_type',
         'quantity',
         'status',
         'scheduled_at',
         'compliance_notes',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function user()

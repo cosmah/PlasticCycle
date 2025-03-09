@@ -6,15 +6,52 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+interface FormData {
+    plastic_type: string;
+    quantity: string;
+    scheduled_at: string;
+    latitude: number | null;
+    longitude: number | null;
+    [key: string]: any;
+}
 
 export default function HouseholdSchedule() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<FormData>({
         plastic_type: '',
         quantity: '',
         scheduled_at: '',
+        latitude: null,
+        longitude: null,
     });
+    const [position, setPosition] = useState<[number, number] | null>(null);
 
-    const submit = (e: { preventDefault: () => void; }) => {
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    setPosition([latitude, longitude]);
+                    setData((prev) => ({ ...prev, latitude, longitude }));
+                },
+                (err) => console.error('Geolocation error:', err),
+                { enableHighAccuracy: true }
+            );
+        }
+    }, [setData]);
+
+    const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post(route('household.schedule.store'));
     };
@@ -27,7 +64,6 @@ export default function HouseholdSchedule() {
                 <main className="flex-1 p-6">
                     <SidebarTrigger />
                     <h1 className="text-2xl font-bold mb-6">Schedule Pickup</h1>
-
                     <Card>
                         <CardHeader>
                             <CardTitle>Request a Pickup</CardTitle>
@@ -68,7 +104,19 @@ export default function HouseholdSchedule() {
                                     />
                                     <InputError message={errors.scheduled_at} />
                                 </div>
-                                <Button type="submit" disabled={processing}>
+                                <div>
+                                    <Label>Location</Label>
+                                    {position ? (
+                                        <MapContainer center={position} zoom={13} style={{ height: '300px', width: '100%' }}>
+                                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                            <Marker position={position} />
+                                        </MapContainer>
+                                    ) : (
+                                        <p>Loading location...</p>
+                                    )}
+                                    <InputError message={errors.latitude || errors.longitude} />
+                                </div>
+                                <Button type="submit" disabled={processing || !position}>
                                     Schedule Pickup
                                 </Button>
                             </form>

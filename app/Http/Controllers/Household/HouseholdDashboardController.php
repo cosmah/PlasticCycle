@@ -36,6 +36,8 @@ class HouseholdDashboardController extends Controller
             'plastic_type' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
             'scheduled_at' => 'required|date|after:now',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
         ]);
 
         $pickup = PickupRequest::create([
@@ -43,15 +45,19 @@ class HouseholdDashboardController extends Controller
             'plastic_type' => $request->plastic_type,
             'quantity' => $request->quantity,
             'scheduled_at' => $request->scheduled_at,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'status' => 'scheduled',
         ]);
 
-        // Award points (e.g., 10 points per kg)
         Reward::create([
             'user_id' => auth()->id(),
             'points' => $request->quantity * 10,
             'description' => "Pickup scheduled for {$request->quantity} kg of {$request->plastic_type}",
         ]);
+
+        event(new \App\Events\PickupScheduled($pickup));
+        \App\Jobs\NotifyPickupTime::dispatch($pickup)->delay($pickup->scheduled_at);
 
         return redirect()->route('household.dashboard')->with('success', 'Pickup scheduled successfully!');
     }
@@ -97,6 +103,14 @@ class HouseholdDashboardController extends Controller
         return Inertia::render('Household/Recycling', [
             'records' => $records,
             'totalImpact' => $totalImpact,
+        ]);
+    }
+
+    public function notifications()
+    {
+        $notifications = auth()->user()->notifications()->latest()->get();
+        return Inertia::render('Household/HouseholdNotifications', [
+            'notifications' => $notifications->toArray(),
         ]);
     }
 }

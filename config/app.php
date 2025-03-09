@@ -1,4 +1,6 @@
 <?php
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
 
 return [
 
@@ -129,4 +131,9 @@ return [
             'Pdf' => Barryvdh\DomPDF\Facade\Pdf::class,
         ],
 
+    'providers' => ServiceProvider::defaultProviders()->merge([
+        // Other providers...
+        App\Providers\BroadcastServiceProvider::class, // Ensure this is present
+        
+    ])->toArray(),
 ];

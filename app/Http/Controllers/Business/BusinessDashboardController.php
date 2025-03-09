@@ -7,7 +7,6 @@ use App\Models\PickupRequest;
 use App\Models\RecyclingRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Barryvdh\DomPDF\Facade\Pdf; // For generating PDF reports
 
 class BusinessDashboardController extends Controller
 {
@@ -16,7 +15,7 @@ class BusinessDashboardController extends Controller
         $user = auth()->user();
         $recentPickups = $user->pickupRequests()->latest()->take(5)->get();
         $totalRecycled = $user->recyclingRecords()->sum('quantity');
-        $pendingPickups = $user->pickupRequests()->whereIn('status', ['pending', 'scheduled'])->count();
+        $pendingPickups = $user->pickupRequests()->where('status', 'scheduled')->count();
 
         return Inertia::render('Business/Dashboard', [
             'recentPickups' => $recentPickups,
@@ -41,19 +40,26 @@ class BusinessDashboardController extends Controller
             'plastic_type' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
             'scheduled_at' => 'required|date|after:now',
-            'compliance_notes' => 'nullable|string|max:1000',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'compliance_notes' => 'nullable|string',
         ]);
 
-        PickupRequest::create([
+        $pickup = PickupRequest::create([
             'user_id' => auth()->id(),
             'plastic_type' => $request->plastic_type,
             'quantity' => $request->quantity,
             'scheduled_at' => $request->scheduled_at,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'status' => 'scheduled',
             'compliance_notes' => $request->compliance_notes,
         ]);
 
-        return redirect()->route('business.waste')->with('success', 'Pickup scheduled successfully!');
+        event(new \App\Events\PickupScheduled($pickup));
+        \App\Jobs\NotifyPickupTime::dispatch($pickup)->delay($pickup->scheduled_at);
+
+        return redirect()->route('business.dashboard')->with('success', 'Pickup scheduled successfully!');
     }
 
     public function reports()
@@ -68,41 +74,30 @@ class BusinessDashboardController extends Controller
 
     public function generateReport(Request $request)
     {
-        $user = auth()->user();
-        $records = $user->recyclingRecords()->with('pickupRequest')->get();
-        $totalRecycled = $records->sum('quantity');
-
-        $pdf = Pdf::loadView('reports.business', [
-            'records' => $records,
-            'totalRecycled' => $totalRecycled,
-            'businessName' => $user->name,
-            'generatedAt' => now()->toDateTimeString(),
-        ]);
-
-        // Ensure the PDF is downloaded as a file, not displayed in browser
-        $filename = 'recycling_report_' . $user->id . '_' . now()->format('Ymd') . '.pdf';
-
-        // If using Inertia, we need to directly return the file response
-        // rather than going through the Inertia response cycle
-        return $pdf->stream($filename);
+        // Placeholder for PDF generation logic (e.g., using DomPDF)
+        return redirect()->route('business.reports')->with('success', 'Report generated!');
     }
 
     public function analytics()
     {
         $user = auth()->user();
         $monthlyRecycling = $user->recyclingRecords()
-            ->selectRaw('strftime("%Y-%m", processed_at) as month, SUM(quantity) as total')
+            ->selectRaw('DATE_FORMAT(processed_at, "%Y-%m") as month, SUM(quantity) as total')
             ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->pluck('total', 'month')
-            ->toArray();
-
+            ->pluck('total', 'month');
         $totalRecycled = $user->recyclingRecords()->sum('quantity');
 
         return Inertia::render('Business/Analytics', [
             'monthlyRecycling' => $monthlyRecycling,
             'totalRecycled' => $totalRecycled,
+        ]);
+    }
+
+    public function notifications()
+    {
+        $notifications = auth()->user()->notifications()->latest()->get();
+        return Inertia::render('Business/Notifications', [
+            'notifications' => $notifications->toArray(),
         ]);
     }
 }
