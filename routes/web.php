@@ -19,8 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('collector')->name('collector.')->group(function () {
         Route::get('/dashboard', [CollectorDashboardController::class, 'index'])->name('dashboard');
         Route::get('/requests', [CollectorDashboardController::class, 'requests'])->name('requests');
+        Route::patch('/requests/{pickupRequest}', [CollectorDashboardController::class, 'updateRequest'])->name('requests.update');
         Route::get('/routes', [CollectorDashboardController::class, 'routes'])->name('routes');
         Route::get('/centers', [CollectorDashboardController::class, 'centers'])->name('centers');
+        Route::post('/centers/deliver', [CollectorDashboardController::class, 'deliverToCenter'])->name('centers.deliver');
     });
 
     // Business-specific routes

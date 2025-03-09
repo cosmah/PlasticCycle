@@ -12,6 +12,7 @@ class RecyclingRecord extends Model
     protected $fillable = [
         'user_id',
         'pickup_request_id',
+        'recycling_center_id', // Added
         'quantity',
         'processed_at',
     ];
@@ -28,5 +29,10 @@ class RecyclingRecord extends Model
     public function pickupRequest()
     {
         return $this->belongsTo(PickupRequest::class);
+    }
+
+    public function recyclingCenter()
+    {
+        return $this->belongsTo(RecyclingCenter::class);
     }
 }

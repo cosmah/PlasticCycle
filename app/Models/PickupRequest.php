@@ -11,11 +11,12 @@ class PickupRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'collector_id', // Added
         'plastic_type',
         'quantity',
         'status',
         'scheduled_at',
-        'compliance_notes', // Added for businesses
+        'compliance_notes',
     ];
 
     protected $casts = [
@@ -25,6 +26,11 @@ class PickupRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function collector()
+    {
+        return $this->belongsTo(User::class, 'collector_id');
     }
 
     public function recyclingRecord()
