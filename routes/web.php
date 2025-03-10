@@ -46,6 +46,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/recycling', [HouseholdDashboardController::class, 'recycling'])->name('recycling');
         Route::get('/notifications', [HouseholdDashboardController::class, 'notifications'])->name('notifications');
     });
+
+    Route::post('/household/notifications/{notificationId}/mark-as-read', [HouseholdDashboardController::class, 'markNotificationAsRead']);
+
 });
 
 require __DIR__.'/settings.php';

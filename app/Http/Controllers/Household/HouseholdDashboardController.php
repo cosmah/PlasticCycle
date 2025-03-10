@@ -121,4 +121,20 @@ class HouseholdDashboardController extends Controller
             'notifications' => $notifications ?: [],
         ]);
     }
+
+    public function markNotificationAsRead(Request $request, $notificationId)
+    {
+        $notification = auth()->user()->notifications()->where('id', $notificationId)->first();
+
+        if (!$notification) {
+            return response()->json(['error' => 'Notification not found'], 404);
+        }
+
+        if (!$notification->read_at) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return response()->json(['success' => 'Notification marked as read']);
+    }
+
 }

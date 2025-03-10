@@ -46,6 +46,15 @@ export default function HouseholdNotifications() {
         return () => clearInterval(interval); // Cleanup on unmount
     }, []);
 
+    const markAsRead = async (notificationId: string) => {
+        try {
+            await axios.post(`/household/notifications/${notificationId}/mark-as-read`);
+            fetchNotifications(); // Refresh notifications after marking as read
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
+    };
+
     return (
         <SidebarProvider>
             <Head title="Notifications" />
@@ -62,7 +71,7 @@ export default function HouseholdNotifications() {
                             {notifications.length > 0 ? ( // Check length safely
                                 <ul>
                                     {notifications.map((notification) => (
-                                        <li key={notification.id} className="py-2">
+                                        <li key={notification.id} className="py-2 cursor-pointer" onClick={() => markAsRead(notification.id)}>
                                             {notification.data.message} -{' '}
                                             {new Date(notification.created_at).toLocaleString()}
                                             {notification.read_at ? ' (Read)' : ' (Unread)'}
