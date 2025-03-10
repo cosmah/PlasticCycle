@@ -56,7 +56,10 @@ class HouseholdDashboardController extends Controller
             'description' => "Pickup scheduled for {$request->quantity} kg of {$request->plastic_type}",
         ]);
 
-        event(new \App\Events\PickupScheduled($pickup));
+        // Store the "pickup scheduled" notification in the database
+        auth()->user()->notify(new \App\Notifications\PickupScheduledNotification($pickup));
+
+        // Queue a job to notify at pickup time
         \App\Jobs\NotifyPickupTime::dispatch($pickup)->delay($pickup->scheduled_at);
 
         return redirect()->route('household.dashboard')->with('success', 'Pickup scheduled successfully!');
@@ -106,11 +109,16 @@ class HouseholdDashboardController extends Controller
         ]);
     }
 
-    public function notifications()
+    public function notifications(Request $request)
     {
-        $notifications = auth()->user()->notifications()->latest()->get();
+        $notifications = auth()->user()->notifications()->latest()->get()->toArray();
+
+        if ($request->wantsJson()) {
+            return response()->json(['notifications' => $notifications ?: []]);
+        }
+
         return Inertia::render('Household/HouseholdNotifications', [
-            'notifications' => $notifications->toArray(),
+            'notifications' => $notifications ?: [],
         ]);
     }
 }

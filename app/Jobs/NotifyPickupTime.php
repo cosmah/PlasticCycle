@@ -2,30 +2,27 @@
 
 namespace App\Jobs;
 
-use App\Models\PickupRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Notification;
+use App\Models\PickupRequest;
 use App\Notifications\PickupTimeReminder;
 
 class NotifyPickupTime implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected PickupRequest $pickupRequest;
+    protected $pickup;
 
-    public function __construct(PickupRequest $pickupRequest)
+    public function __construct(PickupRequest $pickup)
     {
-        $this->pickupRequest = $pickupRequest;
+        $this->pickup = $pickup;
     }
 
-    public function handle(): void
+    public function handle()
     {
-        if ($this->pickupRequest->status === 'scheduled' && now()->gte($this->pickupRequest->scheduled_at)) {
-            $this->pickupRequest->user->notify(new PickupTimeReminder($this->pickupRequest));
-        }
+        $this->pickup->user->notify(new PickupTimeReminder($this->pickup));
     }
 }

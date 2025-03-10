@@ -1,58 +1,50 @@
-
 import { Head, usePage } from '@inertiajs/react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+import axios from 'axios';
 
 interface Notification {
-    id: number;
-    message: string;
-    pickup_id: number;
-    scheduled_at: string;
+    id: string;
+    data: {
+        message: string;
+        pickup_id: number;
+        scheduled_at: string;
+    };
     created_at: string;
-}
-
-declare global {
-    interface Window {
-        Pusher: typeof Pusher;
-    }
+    read_at: string | null;
 }
 
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 
 interface PageProps extends InertiaPageProps {
     auth: { user: { id: number } };
-    notifications: Notification[];
+    notifications?: Notification[]; // Make optional to avoid undefined issues
 }
 
 export default function HouseholdNotifications() {
-    const { notifications: initialNotifications, auth } = usePage<PageProps>().props;
+    const { notifications: initialNotifications = [] } = usePage<PageProps>().props; // Default to empty array
     const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
 
-    useEffect(() => {
-        window.Pusher = Pusher;
-        const echo = new Echo({
-            broadcaster: 'pusher',
-            key: import.meta.env.VITE_PUSHER_APP_KEY,
-            cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-            forceTLS: true,
-        });
-
-        echo.private(`user.${auth.user.id}`)
-            .listen('PickupScheduled', (e: Notification) => {
-                setNotifications((prev) => [e, ...prev]);
-            })
-            .notification((notification: Notification) => {
-                setNotifications((prev) => [notification, ...prev]);
+    const fetchNotifications = async () => {
+        try {
+            const response = await axios.get('/household/notifications', {
+                headers: { Accept: 'application/json' }, // Ensure JSON response
             });
+            setNotifications(response.data.notifications || []); // Fallback to empty array
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+            setNotifications([]); // Fallback on error
+        }
+    };
 
-        return () => {
-            echo.disconnect();
-        };
-    }, [auth.user.id]);
+    useEffect(() => {
+        fetchNotifications(); // Initial fetch
+        const interval = setInterval(fetchNotifications, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(interval); // Cleanup on unmount
+    }, []);
 
     return (
         <SidebarProvider>
@@ -67,11 +59,13 @@ export default function HouseholdNotifications() {
                             <CardTitle>Your Notifications</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {notifications.length ? (
+                            {notifications.length > 0 ? ( // Check length safely
                                 <ul>
                                     {notifications.map((notification) => (
                                         <li key={notification.id} className="py-2">
-                                            {notification.message} - {new Date(notification.created_at).toLocaleString()}
+                                            {notification.data.message} -{' '}
+                                            {new Date(notification.created_at).toLocaleString()}
+                                            {notification.read_at ? ' (Read)' : ' (Unread)'}
                                         </li>
                                     ))}
                                 </ul>
