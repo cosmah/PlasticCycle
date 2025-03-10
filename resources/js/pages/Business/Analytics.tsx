@@ -13,15 +13,29 @@ interface BusinessAnalyticsProps {
     totalRecycled: number;
 }
 
+interface ChartData {
+    labels: string[];
+    datasets: {
+        label: string;
+        data: number[];
+        borderColor: string;
+        backgroundColor: string;
+        fill: boolean;
+    }[];
+}
+
+
 export default function BusinessAnalytics({ monthlyRecycling, totalRecycled }: BusinessAnalyticsProps) {
-    const chartData = {
-        labels: Object.keys(monthlyRecycling),
+    const chartData: ChartData = {
+        labels: Object.keys(monthlyRecycling).sort(), // Sort months chronologically
         datasets: [
             {
                 label: 'Recycled Waste (kg)',
-                data: Object.values(monthlyRecycling),
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                data: Object.keys(monthlyRecycling)
+                    .sort()
+                    .map(month => monthlyRecycling[month]),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
                 fill: true,
             },
         ],
@@ -29,10 +43,34 @@ export default function BusinessAnalytics({ monthlyRecycling, totalRecycled }: B
 
     const options = {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-            legend: { position: 'top' as const },
-            title: { display: true, text: 'Monthly Recycling Trends' },
+            legend: { 
+                position: 'top' as const,
+                labels: { color: '#1f2937' }
+            },
+            title: { 
+                display: true, 
+                text: 'Monthly Recycling Trends',
+                color: '#1f2937',
+                font: { size: 16 }
+            },
         },
+        scales: {
+            x: {
+                grid: { color: '#e5e7eb' },
+                ticks: { color: '#4b5563' }
+            },
+            y: {
+                grid: { color: '#e5e7eb' },
+                ticks: { 
+                    color: '#4b5563',
+                    callback: function(value: string | number) {
+                        return `${value} kg`;
+                    }
+                }
+            }
+        }
     };
 
     return (

@@ -7,7 +7,7 @@ use App\Models\PickupRequest;
 use App\Models\RecyclingRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
+use Illuminate\Support\Facades\DB;
 
 class BusinessDashboardController extends Controller
 {
@@ -80,13 +80,21 @@ class BusinessDashboardController extends Controller
         return redirect()->route('business.reports')->with('success', 'Report generated!');
     }
 
+
     public function analytics()
     {
         $user = auth()->user();
+        $driver = DB::getDriverName();
+
         $monthlyRecycling = $user->recyclingRecords()
-            ->selectRaw('DATE_FORMAT(processed_at, "%Y-%m") as month, SUM(quantity) as total')
+            ->selectRaw(
+                $driver === 'sqlite'
+                ? 'strftime("%Y-%m", processed_at) as month, SUM(quantity) as total'
+                : 'DATE_FORMAT(processed_at, "%Y-%m") as month, SUM(quantity) as total'
+            )
             ->groupBy('month')
             ->pluck('total', 'month');
+
         $totalRecycled = $user->recyclingRecords()->sum('quantity');
 
         return Inertia::render('Business/Analytics', [
@@ -94,6 +102,7 @@ class BusinessDashboardController extends Controller
             'totalRecycled' => $totalRecycled,
         ]);
     }
+
 
     public function notifications(Request $request)
     {
