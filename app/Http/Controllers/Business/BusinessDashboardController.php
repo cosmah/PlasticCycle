@@ -8,6 +8,7 @@ use App\Models\RecyclingRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+
 class BusinessDashboardController extends Controller
 {
     public function index()
@@ -42,7 +43,6 @@ class BusinessDashboardController extends Controller
             'scheduled_at' => 'required|date|after:now',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'compliance_notes' => 'nullable|string',
         ]);
 
         $pickup = PickupRequest::create([
@@ -53,13 +53,15 @@ class BusinessDashboardController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'status' => 'scheduled',
-            'compliance_notes' => $request->compliance_notes,
         ]);
 
-        event(new \App\Events\PickupScheduled($pickup));
+        // Store the "pickup scheduled" notification in the database
+        auth()->user()->notify(new \App\Notifications\PickupScheduledNotification($pickup));
+
+        // Queue a job to notify at pickup time
         \App\Jobs\NotifyPickupTime::dispatch($pickup)->delay($pickup->scheduled_at);
 
-        return redirect()->route('business.dashboard')->with('success', 'Pickup scheduled successfully!');
+        return redirect()->route('household.dashboard')->with('success', 'Pickup scheduled successfully!');
     }
 
     public function reports()
@@ -93,11 +95,31 @@ class BusinessDashboardController extends Controller
         ]);
     }
 
-    public function notifications()
+    public function notifications(Request $request)
     {
-        $notifications = auth()->user()->notifications()->latest()->get();
-        return Inertia::render('Business/Notifications', [
-            'notifications' => $notifications->toArray(),
+        $notifications = auth()->user()->notifications()->latest()->get()->toArray();
+
+        if ($request->wantsJson()) {
+            return response()->json(['notifications' => $notifications ?: []]);
+        }
+
+        return Inertia::render('Household/HouseholdNotifications', [
+            'notifications' => $notifications ?: [],
         ]);
+    }
+
+    public function markNotificationAsRead(Request $request, $notificationId)
+    {
+        $notification = auth()->user()->notifications()->where('id', $notificationId)->first();
+
+        if (!$notification) {
+            return response()->json(['error' => 'Notification not found'], 404);
+        }
+
+        if (!$notification->read_at) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return response()->json(['success' => 'Notification marked as read']);
     }
 }
