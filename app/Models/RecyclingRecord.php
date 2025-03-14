@@ -12,7 +12,8 @@ class RecyclingRecord extends Model
     protected $fillable = [
         'user_id',
         'pickup_request_id',
-        'recycling_center_id', // Added
+        'recycling_center_id',
+        'collector_id', // Added
         'quantity',
         'processed_at',
     ];

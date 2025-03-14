@@ -1,8 +1,10 @@
 import React from 'react';
-import { Head } from '@inertiajs/react'; // Only need Head since this is mock data
-import { Clock, Package2, User, Menu } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { Clock, Package2, User } from 'lucide-react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { router } from '@inertiajs/react';
+import { RouteParams } from 'vendor/tightenco/ziggy/src/js';
 
 // Types
 interface User {
@@ -63,23 +65,27 @@ function RequestCard({ request, onAction, actionLabel }: {
   );
 }
 
-// Mock data for demonstration
-const availableRequests: Request[] = [
-  { id: 1, quantity: 50, plastic_type: 'PET', user: { name: 'John Doe' }, scheduled_at: '2024-03-20', status: 'pending' },
-  { id: 2, quantity: 30, plastic_type: 'HDPE', user: { name: 'Jane Smith' }, scheduled_at: '2024-03-21', status: 'pending' },
-];
-
-const myRequests: Request[] = [
-  { id: 3, quantity: 45, plastic_type: 'PVC', user: { name: 'Alice Johnson' }, scheduled_at: '2024-03-19', status: 'scheduled' },
-];
-
-function Request() {
+function Request({ availableRequests, myRequests }: { availableRequests: Request[], myRequests: Request[] }) {
   const handleAcceptRequest = (id: number) => {
-    console.log('Accepting request:', id);
+    router.patch(route('collector.requests.update', { id }), {
+      status: 'scheduled',
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Toast notification could be shown here
+      }
+    });
   };
 
   const handleCompleteRequest = (id: number) => {
-    console.log('Completing request:', id);
+    router.patch(route('collector.requests.update', { id }), {
+      status: 'completed',
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Toast notification could be shown here
+      }
+    });
   };
 
   return (
@@ -96,7 +102,7 @@ function Request() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">Available Requests</h2>
                 <div className="grid gap-4">
                   {availableRequests.length > 0 ? (
-                    availableRequests.map((request) => (
+                    availableRequests.map((request: Request) => (
                       <RequestCard
                         key={request.id}
                         request={request}
@@ -113,7 +119,7 @@ function Request() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">My Requests</h2>
                 <div className="grid gap-4">
                   {myRequests.length > 0 ? (
-                    myRequests.map((request) => (
+                    myRequests.map((request: Request) => (
                       <RequestCard
                         key={request.id}
                         request={request}

@@ -7,6 +7,7 @@ use App\Models\PickupRequest;
 use App\Models\RecyclingCenter;
 use App\Models\RecyclingRecord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class CollectorDashboardController extends Controller
@@ -14,15 +15,15 @@ class CollectorDashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $pendingRequests = PickupRequest::where('collector_id', $user->id)
-            ->where('status', 'scheduled')
+        $pendingRequests = PickupRequest::where('status', 'pending')
+            ->whereNull('collector_id')
             ->count();
-        $recentCollections = $user->pickupRequests()
+        $recentCollections = PickupRequest::where('collector_id', $user->id)
             ->where('status', 'completed')
             ->latest()
             ->take(5)
             ->get();
-        $totalCollected = RecyclingRecord::whereHas('pickupRequest', fn($q) => $q->where('collector_id', $user->id))
+        $totalCollected = RecyclingRecord::where('collector_id', $user->id)
             ->sum('quantity');
 
         return Inertia::render('Collector/Dashboard', [
@@ -34,16 +35,48 @@ class CollectorDashboardController extends Controller
 
     public function requests()
     {
-        $availableRequests = PickupRequest::whereNull('collector_id')
-            ->where('status', 'pending')
-            ->with('user')
-            ->get();
-
-        $myRequests = auth()->user()->collectedRequests()
-            ->with('user')
-            ->latest()
-            ->get();
-
+        Log::info('CollectorDashboardController::requests - Starting to fetch requests');
+        
+        // Log the user ID for debugging
+        $userId = auth()->id();
+        Log::info("CollectorDashboardController::requests - Authenticated user ID: {$userId}");
+        
+        // Fetch all scheduled requests where collector_id is null
+        $availableRequestsQuery = PickupRequest::where('status', 'scheduled')
+            ->whereNull('collector_id')
+            ->with('user');
+        
+        // Log the SQL query for debugging
+        Log::info("CollectorDashboardController::requests - Available requests query: {$availableRequestsQuery->toSql()}");
+        
+        $availableRequests = $availableRequestsQuery->get();
+        
+        // Log the count of available requests
+        Log::info("CollectorDashboardController::requests - Available requests count: {$availableRequests->count()}");
+        
+        // Log individual request details for deeper inspection
+        foreach ($availableRequests as $index => $request) {
+            Log::info("CollectorDashboardController::requests - Available request #{$index}: ID: {$request->id}, User: {$request->user->name}, Status: {$request->status}");
+        }
+        
+        // Fetch all requests assigned to the current collector
+        $myRequestsQuery = PickupRequest::where('collector_id', $userId)
+            ->with('user');
+        
+        // Log the SQL query for debugging
+        Log::info("CollectorDashboardController::requests - My requests query: {$myRequestsQuery->toSql()}");
+        
+        $myRequests = $myRequestsQuery->latest()->get();
+        
+        // Log the count of my requests
+        Log::info("CollectorDashboardController::requests - My requests count: {$myRequests->count()}");
+        
+        // Log individual request details for deeper inspection
+        foreach ($myRequests as $index => $request) {
+            Log::info("CollectorDashboardController::requests - My request #{$index}: ID: {$request->id}, User: {$request->user->name}, Status: {$request->status}");
+        }
+        
+        // Return the data to the view
         return Inertia::render('Collector/Requests', [
             'availableRequests' => $availableRequests,
             'myRequests' => $myRequests,
@@ -52,24 +85,42 @@ class CollectorDashboardController extends Controller
 
     public function updateRequest(Request $request, PickupRequest $pickupRequest)
     {
+        Log::info("CollectorDashboardController::updateRequest - Starting to update request ID: {$pickupRequest->id}");
+        Log::info("CollectorDashboardController::updateRequest - Requested status: {$request->status}");
+        Log::info("CollectorDashboardController::updateRequest - Current collector ID: " . ($pickupRequest->collector_id ?? 'null'));
+        
         $request->validate([
             'status' => 'required|in:scheduled,completed',
         ]);
 
         if ($pickupRequest->collector_id && $pickupRequest->collector_id !== auth()->id()) {
+            Log::warning("CollectorDashboardController::updateRequest - Request already assigned to another collector: {$pickupRequest->collector_id}");
             return back()->withErrors(['status' => 'This request is assigned to another collector.']);
         }
 
         if ($request->status === 'scheduled' && !$pickupRequest->collector_id) {
+            Log::info("CollectorDashboardController::updateRequest - Assigning request to collector: " . auth()->id());
             $pickupRequest->update(['collector_id' => auth()->id(), 'status' => 'scheduled']);
+            Log::info("CollectorDashboardController::updateRequest - Request successfully assigned");
         } elseif ($request->status === 'completed') {
+            Log::info("CollectorDashboardController::updateRequest - Marking request as completed");
             $pickupRequest->update(['status' => 'completed']);
-            RecyclingRecord::create([
+            
+            // Create recycling record
+            $recyclingRecord = RecyclingRecord::create([
                 'user_id' => $pickupRequest->user_id,
                 'pickup_request_id' => $pickupRequest->id,
+                'collector_id' => auth()->id(), // Add collector_id here
                 'quantity' => $pickupRequest->quantity,
                 'processed_at' => now(),
             ]);
+            
+            Log::info("CollectorDashboardController::updateRequest - Created recycling record ID: {$recyclingRecord->id}");
+        }
+
+        // Return a json response for AJAX requests
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
         }
 
         return redirect()->route('collector.requests')->with('success', 'Request updated successfully!');
