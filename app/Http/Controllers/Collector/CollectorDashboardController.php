@@ -151,10 +151,10 @@ class CollectorDashboardController extends Controller
 
     public function centers()
     {
+        $user = auth()->user();
         $centers = RecyclingCenter::all();
-        $completedRequests = auth()->user()->pickupRequests()
+        $completedRequests = PickupRequest::where('collector_id', $user->id)
             ->where('status', 'completed')
-            ->whereDoesntHave('recyclingRecord')
             ->get();
 
         return Inertia::render('Collector/Centers', [

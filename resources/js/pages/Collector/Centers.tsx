@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from 'react';
+import { Key } from 'react';
 
 export default function CollectorCenters() {
     const { centers, completedRequests } = usePage<{ centers: Center[], completedRequests: Request[] }>().props;
@@ -22,6 +22,7 @@ export default function CollectorCenters() {
         quantity: number;
         plastic_type: string;
     }
+
     const { data, setData, post, processing } = useForm({
         pickup_request_id: '',
         recycling_center_id: '',
@@ -92,7 +93,7 @@ export default function CollectorCenters() {
                             <CardContent>
                                 {centers.length ? (
                                     <ul>
-                                        {centers.map((center: { id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; address: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; accepted_plastic_types: any[]; capacity: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
+                                        {centers.map((center) => (
                                             <li key={center.id} className="py-2">
                                                 {center.name} - {center.address} (Accepts: {center.accepted_plastic_types.join(', ')}, Capacity: {center.capacity} kg/day)
                                             </li>
