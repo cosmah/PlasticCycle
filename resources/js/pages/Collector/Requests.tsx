@@ -1,39 +1,85 @@
 import React from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react'; // Only need Head since this is mock data
+import { Clock, Package2, User, Menu } from 'lucide-react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
+// Types
+interface User {
+  name: string;
+}
 
 interface Request {
   id: number;
   quantity: number;
   plastic_type: string;
-  user: { name: string };
+  user: User;
   scheduled_at: string;
-  status: string;
+  status: 'pending' | 'scheduled' | 'completed';
 }
 
-interface PageProps {
-  availableRequests: Request[];
-  myRequests: Request[];
+// Request Card Component
+function RequestCard({ request, onAction, actionLabel }: {
+  request: Request;
+  onAction?: () => void;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 mb-4 hover:shadow-lg transition-shadow">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Package2 className="w-4 h-4" />
+            <span className="font-medium">{request.quantity} kg of {request.plastic_type}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <User className="w-4 h-4" />
+            <span>{request.user.name}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <Clock className="w-4 h-4" />
+            <span>{new Date(request.scheduled_at).toLocaleDateString()}</span>
+          </div>
+          <div className="inline-flex items-center">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              request.status === 'completed' ? 'bg-green-100 text-green-800' :
+              request.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+            </span>
+          </div>
+        </div>
+        {actionLabel && onAction && (
+          <button
+            onClick={onAction}
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            {actionLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
-interface ExtendedFormOptions {
-  [key: string]: any; // Add index signature
-  status?: string;
-}
+// Mock data for demonstration
+const availableRequests: Request[] = [
+  { id: 1, quantity: 50, plastic_type: 'PET', user: { name: 'John Doe' }, scheduled_at: '2024-03-20', status: 'pending' },
+  { id: 2, quantity: 30, plastic_type: 'HDPE', user: { name: 'Jane Smith' }, scheduled_at: '2024-03-21', status: 'pending' },
+];
 
-export default function CollectorRequests() {
-  const { availableRequests, myRequests } = usePage().props as unknown as PageProps;
-  const { patch, processing } = useForm<ExtendedFormOptions>();
+const myRequests: Request[] = [
+  { id: 3, quantity: 45, plastic_type: 'PVC', user: { name: 'Alice Johnson' }, scheduled_at: '2024-03-19', status: 'scheduled' },
+];
 
-  const acceptRequest = (id: number) => {
-    patch(route('collector.requests.update', id), { status: 'scheduled' });
+function Request() {
+  const handleAcceptRequest = (id: number) => {
+    console.log('Accepting request:', id);
   };
 
-  const completeRequest = (id: number) => {
-    patch(route('collector.requests.update', id), { status: 'completed' });
+  const handleCompleteRequest = (id: number) => {
+    console.log('Completing request:', id);
   };
 
   return (
@@ -43,61 +89,49 @@ export default function CollectorRequests() {
         <AppSidebar />
         <main className="flex-1 p-6">
           <SidebarTrigger />
-          <h1 className="text-2xl font-bold mb-6">Collection Requests</h1>
-
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Requests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {availableRequests.length ? (
-                  <ul>
-                    {availableRequests.map((request) => (
-                      <li key={request.id} className="py-2 flex justify-between">
-                        <span>
-                          {request.quantity} kg of {request.plastic_type} from {request.user.name} ({new Date(request.scheduled_at).toLocaleDateString()})
-                        </span>
-                        <Button onClick={() => acceptRequest(request.id)} disabled={processing}>
-                          Accept
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No available requests.</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>My Requests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {myRequests.length ? (
-                  <ul>
-                    {myRequests.map((request) => (
-                      <li key={request.id} className="py-2 flex justify-between">
-                        <span>
-                          {request.quantity} kg of {request.plastic_type} from {request.user.name} - {request.status} ({new Date(request.scheduled_at).toLocaleDateString()})
-                        </span>
-                        {request.status === 'scheduled' && (
-                          <Button onClick={() => completeRequest(request.id)} disabled={processing}>
-                            Mark as Completed
-                          </Button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No assigned requests.</p>
-                )}
-              </CardContent>
-            </Card>
+          <div className="max-w-5xl mx-auto">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Collection Requests</h1>
+            <div className="space-y-8">
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">Available Requests</h2>
+                <div className="grid gap-4">
+                  {availableRequests.length > 0 ? (
+                    availableRequests.map((request) => (
+                      <RequestCard
+                        key={request.id}
+                        request={request}
+                        onAction={() => handleAcceptRequest(request.id)}
+                        actionLabel="Accept Request"
+                      />
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No available requests at the moment.</p>
+                  )}
+                </div>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">My Requests</h2>
+                <div className="grid gap-4">
+                  {myRequests.length > 0 ? (
+                    myRequests.map((request) => (
+                      <RequestCard
+                        key={request.id}
+                        request={request}
+                        onAction={request.status === 'scheduled' ? () => handleCompleteRequest(request.id) : undefined}
+                        actionLabel={request.status === 'scheduled' ? 'Mark as Completed' : undefined}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">You haven't accepted any requests yet.</p>
+                  )}
+                </div>
+              </section>
+            </div>
           </div>
         </main>
       </div>
     </SidebarProvider>
   );
 }
+
+export default Request;

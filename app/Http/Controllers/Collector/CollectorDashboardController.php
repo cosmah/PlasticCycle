@@ -38,7 +38,8 @@ class CollectorDashboardController extends Controller
             ->where('status', 'pending')
             ->with('user')
             ->get();
-        $myRequests = auth()->user()->pickupRequests()
+
+        $myRequests = auth()->user()->collectedRequests()
             ->with('user')
             ->latest()
             ->get();

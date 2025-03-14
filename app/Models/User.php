@@ -30,9 +30,16 @@ class User extends Authenticatable
         ];
     }
 
+    // Requests where the user is the requester
     public function pickupRequests()
     {
-        return $this->hasMany(PickupRequest::class);
+        return $this->hasMany(PickupRequest::class, 'user_id');
+    }
+
+    // Requests where the user is the collector
+    public function collectedRequests()
+    {
+        return $this->hasMany(PickupRequest::class, 'collector_id');
     }
 
     public function rewards()
