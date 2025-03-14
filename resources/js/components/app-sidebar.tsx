@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle, Building, FileText, BarChart, Home, Calendar, Gift, Bell } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Truck, Map, Recycle, Building, FileText, BarChart, Home, Calendar, Gift, Bell, Users, Monitor } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const collectorNavItems: NavItem[] = [
@@ -38,6 +38,13 @@ const householdNavItems: NavItem[] = [
     { title: 'Notifications', url: '/household/notifications', icon: Bell },
 ];
 
+const adminNavItems: NavItem[] = [
+    { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutGrid },
+    { title: 'Users', url: '/admin/users', icon: Users },
+    { title: 'Monitoring', url: '/admin/monitoring', icon: Monitor },
+    { title: 'Centers', url: '/admin/centers', icon: Recycle },
+];
+
 const defaultNavItems: NavItem[] = [
     { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
 ];
@@ -58,6 +65,8 @@ export function AppSidebar() {
             ? businessNavItems
             : userType === 'household'
             ? householdNavItems
+            : userType === 'admin'
+            ? adminNavItems
             : defaultNavItems;
 
     const homeUrl =
@@ -67,6 +76,8 @@ export function AppSidebar() {
             ? '/business/dashboard'
             : userType === 'household'
             ? '/household/dashboard'
+            : userType === 'admin'
+            ? '/admin/dashboard'
             : '/dashboard';
 
     return (

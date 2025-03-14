@@ -17,8 +17,13 @@ class CollectorDashboardController extends Controller
         $pendingRequests = PickupRequest::where('collector_id', $user->id)
             ->where('status', 'scheduled')
             ->count();
-        $recentCollections = $user->pickupRequests()->where('status', 'completed')->latest()->take(5)->get();
-        $totalCollected = RecyclingRecord::whereHas('pickupRequest', fn($q) => $q->where('collector_id', $user->id))->sum('quantity');
+        $recentCollections = $user->pickupRequests()
+            ->where('status', 'completed')
+            ->latest()
+            ->take(5)
+            ->get();
+        $totalCollected = RecyclingRecord::whereHas('pickupRequest', fn($q) => $q->where('collector_id', $user->id))
+            ->sum('quantity');
 
         return Inertia::render('Collector/Dashboard', [
             'pendingRequests' => $pendingRequests,
@@ -29,8 +34,14 @@ class CollectorDashboardController extends Controller
 
     public function requests()
     {
-        $availableRequests = PickupRequest::whereNull('collector_id')->where('status', 'pending')->with('user')->get();
-        $myRequests = auth()->user()->pickupRequests()->with('user')->latest()->get();
+        $availableRequests = PickupRequest::whereNull('collector_id')
+            ->where('status', 'pending')
+            ->with('user')
+            ->get();
+        $myRequests = auth()->user()->pickupRequests()
+            ->with('user')
+            ->latest()
+            ->get();
 
         return Inertia::render('Collector/Requests', [
             'availableRequests' => $availableRequests,
@@ -57,7 +68,6 @@ class CollectorDashboardController extends Controller
                 'pickup_request_id' => $pickupRequest->id,
                 'quantity' => $pickupRequest->quantity,
                 'processed_at' => now(),
-                // recycling_center_id will be set in the centers screen
             ]);
         }
 
@@ -73,10 +83,12 @@ class CollectorDashboardController extends Controller
             ->map(function ($request) {
                 return [
                     'id' => $request->id,
-                    'address' => $request->user->name . "'s location", // Placeholder; real app would use user address
+                    'address' => $request->user->name . "'s location",
                     'plastic_type' => $request->plastic_type,
                     'quantity' => $request->quantity,
                     'scheduled_at' => $request->scheduled_at,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
                 ];
             });
 
