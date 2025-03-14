@@ -155,6 +155,7 @@ class CollectorDashboardController extends Controller
         $centers = RecyclingCenter::all();
         $completedRequests = PickupRequest::where('collector_id', $user->id)
             ->where('status', 'completed')
+            ->whereDoesntHave('recyclingRecord')
             ->get();
 
         return Inertia::render('Collector/Centers', [
@@ -175,10 +176,14 @@ class CollectorDashboardController extends Controller
             return back()->withErrors(['pickup_request_id' => 'Invalid request.']);
         }
 
-        $record = RecyclingRecord::where('pickup_request_id', $pickupRequest->id)->first();
-        if ($record) {
-            $record->update(['recycling_center_id' => $request->recycling_center_id]);
-        }
+        $record = RecyclingRecord::create([
+            'user_id' => $pickupRequest->user_id,
+            'pickup_request_id' => $pickupRequest->id,
+            'recycling_center_id' => $request->recycling_center_id,
+            'collector_id' => auth()->id(),
+            'quantity' => $pickupRequest->quantity,
+            'processed_at' => now(),
+        ]);
 
         return redirect()->route('collector.centers')->with('success', 'Waste delivered to center!');
     }
