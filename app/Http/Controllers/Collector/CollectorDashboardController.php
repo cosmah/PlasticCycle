@@ -36,46 +36,46 @@ class CollectorDashboardController extends Controller
     public function requests()
     {
         Log::info('CollectorDashboardController::requests - Starting to fetch requests');
-        
+
         // Log the user ID for debugging
         $userId = auth()->id();
         Log::info("CollectorDashboardController::requests - Authenticated user ID: {$userId}");
-        
+
         // Fetch all scheduled requests where collector_id is null
         $availableRequestsQuery = PickupRequest::where('status', 'scheduled')
             ->whereNull('collector_id')
             ->with('user');
-        
+
         // Log the SQL query for debugging
         Log::info("CollectorDashboardController::requests - Available requests query: {$availableRequestsQuery->toSql()}");
-        
+
         $availableRequests = $availableRequestsQuery->get();
-        
+
         // Log the count of available requests
         Log::info("CollectorDashboardController::requests - Available requests count: {$availableRequests->count()}");
-        
+
         // Log individual request details for deeper inspection
         foreach ($availableRequests as $index => $request) {
             Log::info("CollectorDashboardController::requests - Available request #{$index}: ID: {$request->id}, User: {$request->user->name}, Status: {$request->status}");
         }
-        
+
         // Fetch all requests assigned to the current collector
         $myRequestsQuery = PickupRequest::where('collector_id', $userId)
             ->with('user');
-        
+
         // Log the SQL query for debugging
         Log::info("CollectorDashboardController::requests - My requests query: {$myRequestsQuery->toSql()}");
-        
+
         $myRequests = $myRequestsQuery->latest()->get();
-        
+
         // Log the count of my requests
         Log::info("CollectorDashboardController::requests - My requests count: {$myRequests->count()}");
-        
+
         // Log individual request details for deeper inspection
         foreach ($myRequests as $index => $request) {
             Log::info("CollectorDashboardController::requests - My request #{$index}: ID: {$request->id}, User: {$request->user->name}, Status: {$request->status}");
         }
-        
+
         // Return the data to the view
         return Inertia::render('Collector/Requests', [
             'availableRequests' => $availableRequests,
@@ -88,7 +88,7 @@ class CollectorDashboardController extends Controller
         Log::info("CollectorDashboardController::updateRequest - Starting to update request ID: {$pickupRequest->id}");
         Log::info("CollectorDashboardController::updateRequest - Requested status: {$request->status}");
         Log::info("CollectorDashboardController::updateRequest - Current collector ID: " . ($pickupRequest->collector_id ?? 'null'));
-        
+
         $request->validate([
             'status' => 'required|in:scheduled,completed',
         ]);
@@ -105,7 +105,7 @@ class CollectorDashboardController extends Controller
         } elseif ($request->status === 'completed') {
             Log::info("CollectorDashboardController::updateRequest - Marking request as completed");
             $pickupRequest->update(['status' => 'completed']);
-            
+
             // Create recycling record
             $recyclingRecord = RecyclingRecord::create([
                 'user_id' => $pickupRequest->user_id,
@@ -114,7 +114,7 @@ class CollectorDashboardController extends Controller
                 'quantity' => $pickupRequest->quantity,
                 'processed_at' => now(),
             ]);
-            
+
             Log::info("CollectorDashboardController::updateRequest - Created recycling record ID: {$recyclingRecord->id}");
         }
 
@@ -128,26 +128,16 @@ class CollectorDashboardController extends Controller
 
     public function routes()
     {
-        $scheduledRequests = auth()->user()->pickupRequests()
+        $requests = PickupRequest::where('collector_id', auth()->id())
             ->where('status', 'scheduled')
-            ->with('user')
-            ->get()
-            ->map(function ($request) {
-                return [
-                    'id' => $request->id,
-                    'address' => $request->user->name . "'s location",
-                    'plastic_type' => $request->plastic_type,
-                    'quantity' => $request->quantity,
-                    'scheduled_at' => $request->scheduled_at,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                ];
-            });
+            ->with('user:id,name')
+            ->get(['id', 'user_id', 'quantity', 'plastic_type', 'address', 'scheduled_at', 'latitude', 'longitude']);
 
         return Inertia::render('Collector/Routes', [
-            'scheduledRequests' => $scheduledRequests,
+            'scheduledRequests' => $requests
         ]);
     }
+
 
     public function centers()
     {

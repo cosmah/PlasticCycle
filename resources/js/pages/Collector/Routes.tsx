@@ -14,6 +14,26 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+const blueIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+});
+
+const redIcon = new L.Icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x-red.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+});
+
 export default function CollectorRoutes() {
     const { scheduledRequests } = usePage<{ scheduledRequests: Array<{ id: Key; quantity: number; plastic_type: string; address: string; scheduled_at: string; latitude: number; longitude: number }> }>().props;
     const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
@@ -44,22 +64,24 @@ export default function CollectorRoutes() {
                             <CardTitle>Scheduled Collections</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {userPosition ? (
-                                <MapContainer center={userPosition} zoom={13} style={{ height: '500px', width: '100%' }}>
-                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                    <Marker position={userPosition} icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41], className: 'blue-marker' })}>
-                                        <Popup>Your Location</Popup>
-                                    </Marker>
-                                    {scheduledRequests.map((request) => (
-                                        <Marker key={request.id} position={[request.latitude, request.longitude]}>
-                                            <Popup>
-                                                {request.quantity} kg of {request.plastic_type} at {request.address} ({new Date(request.scheduled_at).toLocaleDateString()})
-                                            </Popup>
+                            {userPosition && scheduledRequests.length > 0 ? (
+                                <div style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
+                                    <MapContainer center={userPosition} zoom={12} style={{ height: '100%', width: '100%' }}>
+                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                        <Marker position={userPosition} icon={blueIcon}>
+                                            <Popup>Your Location</Popup>
                                         </Marker>
-                                    ))}
-                                </MapContainer>
+                                        {scheduledRequests.map((request) => (
+                                            <Marker key={request.id} position={[request.latitude, request.longitude]} icon={redIcon}>
+                                                <Popup>
+                                                    {request.quantity} kg of {request.plastic_type} at {request.address} ({new Date(request.scheduled_at).toLocaleDateString()})
+                                                </Popup>
+                                            </Marker>
+                                        ))}
+                                    </MapContainer>
+                                </div>
                             ) : (
-                                <p>Loading location...</p>
+                                <p>Loading location or scheduled requests...</p>
                             )}
                         </CardContent>
                     </Card>
