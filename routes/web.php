@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pickup-details/{id}', [CollectorDashboardController::class, 'pickupDetails'])->name('pickup-details');
     });
 
-    // Business-specific routes (assumed complete as per your note)
+    // Business-specific routes
     Route::prefix('business')->name('business.')->middleware('role:business')->group(function () {
         Route::get('/dashboard', [BusinessDashboardController::class, 'index'])->name('dashboard');
         Route::get('/waste', [BusinessDashboardController::class, 'waste'])->name('waste');
@@ -43,7 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/reports/generate', [BusinessDashboardController::class, 'generateReport'])->name('reports.generate');
         Route::get('/analytics', [BusinessDashboardController::class, 'analytics'])->name('analytics');
         Route::get('/notifications', [BusinessDashboardController::class, 'notifications'])->name('notifications');
+        Route::get('/requests', [BusinessDashboardController::class, 'requests'])->name('requests');
+        Route::get('/pickup-details/{id}', [BusinessDashboardController::class, 'pickupDetails'])->name('pickup-details');
     });
+
+    Route::post('/business/notifications/{notificationId}/mark-as-read', [BusinessDashboardController::class, 'markNotificationAsRead']);
 
     // Household-specific routes (assumed complete as per your note)
     Route::prefix('household')->name('household.')->middleware('role:household')->group(function () {

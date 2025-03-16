@@ -28,6 +28,7 @@ const businessNavItems: NavItem[] = [
     { title: 'Reports', url: '/business/reports', icon: FileText },
     { title: 'Analytics', url: '/business/analytics', icon: BarChart },
     { title: 'Notifications', url: '/business/notifications', icon: Bell },
+    { title: 'Requests', url: '/business/requests', icon: Truck }, // Added Requests link
 ];
 
 const householdNavItems: NavItem[] = [

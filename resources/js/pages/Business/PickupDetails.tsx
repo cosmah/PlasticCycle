@@ -30,6 +30,7 @@ export default function PickupDetails() {
                   <p><strong>Latitude:</strong> {pickupRequest.latitude}</p>
                   <p><strong>Longitude:</strong> {pickupRequest.longitude}</p>
                   <p><strong>Status:</strong> {pickupRequest.status}</p>
+                  <p><strong>Compliance Notes:</strong> {pickupRequest.compliance_notes}</p>
                 </div>
               ) : (
                 <p>No pickup request details available.</p>
