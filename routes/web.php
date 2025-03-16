@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/routes', [CollectorDashboardController::class, 'routes'])->name('routes');
         Route::get('/centers', [CollectorDashboardController::class, 'centers'])->name('centers');
         Route::post('/centers/deliver', [CollectorDashboardController::class, 'deliverToCenter'])->name('centers.deliver');
+        Route::get('/pickup-details/{id}', [CollectorDashboardController::class, 'pickupDetails'])->name('pickup-details');
     });
 
     // Business-specific routes (assumed complete as per your note)

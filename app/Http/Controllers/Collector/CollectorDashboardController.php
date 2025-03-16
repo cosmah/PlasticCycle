@@ -177,4 +177,13 @@ class CollectorDashboardController extends Controller
 
         return redirect()->route('collector.centers')->with('success', 'Waste delivered to center!');
     }
+
+    public function pickupDetails($id)
+    {
+        $pickupRequest = PickupRequest::with('user')->findOrFail($id);
+
+        return Inertia::render('Collector/PickupDetails', [
+            'pickupRequest' => $pickupRequest,
+        ]);
+    }
 }

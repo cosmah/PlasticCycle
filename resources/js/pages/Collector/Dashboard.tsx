@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,9 +40,11 @@ export default function CollectorDashboard() {
                             <CardContent>
                                 {recentCollections.length ? (
                                     <ul>
-                                        {recentCollections.map((collection: { id: Key | null | undefined; quantity: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; plastic_type: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; scheduled_at: string | number | Date; }) => (
+                                        {recentCollections.map((collection: { id: Key; quantity: string; plastic_type: string; scheduled_at: string; }) => (
                                             <li key={collection.id} className="py-2">
-                                                {collection.quantity} kg of {collection.plastic_type} ({new Date(collection.scheduled_at).toLocaleDateString()})
+                                                <Link href={route('collector.pickup-details', { id: collection.id })} className="text-blue-600 hover:underline">
+                                                    {collection.quantity} kg of {collection.plastic_type} ({new Date(collection.scheduled_at).toLocaleDateString()})
+                                                </Link>
                                             </li>
                                         ))}
                                     </ul>
