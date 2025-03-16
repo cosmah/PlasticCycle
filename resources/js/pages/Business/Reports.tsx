@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; // Import autoTable directly
 
 interface Record {
     id: Key | null | undefined;
@@ -30,37 +32,48 @@ export default function BusinessReports({ records }: BusinessReportsProps) {
 
     const generateReport = (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = route('business.reports.generate');
-        
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-        }
-        
-        document.body.appendChild(form);
-        form.submit();
-        
-        setTimeout(() => {
-            document.body.removeChild(form);
-        }, 1000);
+
+        const pdf = new jsPDF();
+        pdf.setFontSize(18);
+        pdf.text('Recycling Report', 14, 22);
+        pdf.setFontSize(12);
+        pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+
+        pdf.setFontSize(14);
+        pdf.text('Recycling Records', 14, 42);
+
+        const tableColumn = ["Date Processed", "Plastic Type", "Quantity (kg)"];
+        const tableRows: any[] = [];
+
+        records.forEach(record => {
+            const recordData = [
+                new Date(record.processed_at).toLocaleDateString(),
+                record.pickup_request.plastic_type,
+                record.quantity
+            ];
+            tableRows.push(recordData);
+        });
+
+        // Use autoTable directly instead of pdf.autoTable
+        autoTable(pdf, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 50,
+            theme: 'striped',
+            headStyles: { fillColor: [22, 160, 133] },
+            margin: { top: 10 },
+        });
+
+        pdf.save('recycling_report.pdf');
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Reports" />
-            
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Reports</h1>
                 </div>
-                
                 <Card className="w-full bg-white shadow-md border-none rounded-lg">
                     <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-gray-200">
                         <CardTitle className="text-lg font-semibold text-gray-800">
