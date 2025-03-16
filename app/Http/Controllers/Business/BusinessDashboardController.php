@@ -55,13 +55,11 @@ class BusinessDashboardController extends Controller
             'status' => 'scheduled',
         ]);
 
-        // Store the "pickup scheduled" notification in the database
         auth()->user()->notify(new \App\Notifications\PickupScheduledNotification($pickup));
-
-        // Queue a job to notify at pickup time
         \App\Jobs\NotifyPickupTime::dispatch($pickup)->delay($pickup->scheduled_at);
 
-        return redirect()->route('household.dashboard')->with('success', 'Pickup scheduled successfully!');
+        // Change this to a business route
+        return redirect()->route('business.waste')->with('success', 'Pickup scheduled successfully!');
     }
 
     public function reports()
