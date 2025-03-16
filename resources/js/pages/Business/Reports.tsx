@@ -59,19 +59,7 @@ export default function BusinessReports({ records }: BusinessReportsProps) {
                     <h1 className="text-2xl font-bold mb-6">Reports</h1>
 
                     <div className="grid gap-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Generate Report</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={generateReport}>
-                                    <p>Download a detailed report of your recycling activity.</p>
-                                    <Button type="submit" disabled={processing} className="mt-4">
-                                        Download PDF Report
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
+                        
 
                         <Card>
                             <CardHeader>
