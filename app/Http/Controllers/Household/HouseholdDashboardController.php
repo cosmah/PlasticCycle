@@ -137,4 +137,23 @@ class HouseholdDashboardController extends Controller
         return response()->json(['success' => 'Notification marked as read']);
     }
 
+    public function requests()
+    {
+        $user = auth()->user();
+        $requests = $user->pickupRequests()->with('user')->latest()->get();
+
+        return Inertia::render('Household/HouseholdRequests', [
+            'requests' => $requests,
+        ]);
+    }
+
+    public function pickupDetails($id)
+    {
+        $pickupRequest = PickupRequest::with('user')->findOrFail($id);
+
+        return Inertia::render('Household/PickupDetails', [
+            'pickupRequest' => $pickupRequest,
+        ]);
+    }
+
 }

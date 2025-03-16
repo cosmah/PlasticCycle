@@ -36,6 +36,7 @@ const householdNavItems: NavItem[] = [
     { title: 'Rewards', url: '/household/rewards', icon: Gift },
     { title: 'My Recycling', url: '/household/recycling', icon: Home },
     { title: 'Notifications', url: '/household/notifications', icon: Bell },
+    { title: 'Requests', url: '/household/requests', icon: Truck }, // Added Requests link
 ];
 
 const adminNavItems: NavItem[] = [
@@ -99,7 +100,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

@@ -54,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/rewards/redeem', [HouseholdDashboardController::class, 'redeemRewards'])->name('rewards.redeem');
         Route::get('/recycling', [HouseholdDashboardController::class, 'recycling'])->name('recycling');
         Route::get('/notifications', [HouseholdDashboardController::class, 'notifications'])->name('notifications');
+        Route::get('/requests', [HouseholdDashboardController::class, 'requests'])->name('requests');
+        Route::get('/pickup-details/{id}', [HouseholdDashboardController::class, 'pickupDetails'])->name('pickup-details');
     });
 
     Route::post('/household/notifications/{notificationId}/mark-as-read', [HouseholdDashboardController::class, 'markNotificationAsRead']);
