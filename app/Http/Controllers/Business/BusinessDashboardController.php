@@ -110,7 +110,7 @@ class BusinessDashboardController extends Controller
             return response()->json(['notifications' => $notifications ?: []]);
         }
 
-        return Inertia::render('Household/HouseholdNotifications', [
+        return Inertia::render('Business/BusinessNotifications', [
             'notifications' => $notifications ?: [],
         ]);
     }
