@@ -105,17 +105,7 @@ class CollectorDashboardController extends Controller
         } elseif ($request->status === 'completed') {
             Log::info("CollectorDashboardController::updateRequest - Marking request as completed");
             $pickupRequest->update(['status' => 'completed']);
-
-            // Create recycling record
-            $recyclingRecord = RecyclingRecord::create([
-                'user_id' => $pickupRequest->user_id,
-                'pickup_request_id' => $pickupRequest->id,
-                'collector_id' => auth()->id(), // Add collector_id here
-                'quantity' => $pickupRequest->quantity,
-                'processed_at' => now(),
-            ]);
-
-            Log::info("CollectorDashboardController::updateRequest - Created recycling record ID: {$recyclingRecord->id}");
+            // Remove the RecyclingRecord::create code from here
         }
 
         // Return a json response for AJAX requests
@@ -141,13 +131,43 @@ class CollectorDashboardController extends Controller
 
     public function centers()
     {
-        $user = auth()->user();
-        $centers = RecyclingCenter::all();
-        $completedRequests = PickupRequest::where('collector_id', $user->id)
-            ->where('status', 'completed')
-            ->whereDoesntHave('recyclingRecord')
-            ->get();
+        Log::info('CollectorDashboardController::centers - Method started.');
 
+        $user = auth()->user();
+        Log::info("CollectorDashboardController::centers - Authenticated user ID: {$user->id}");
+
+        // Fetch recycling centers
+        $centers = RecyclingCenter::all();
+        Log::info("CollectorDashboardController::centers - Number of recycling centers found: " . count($centers));
+        foreach ($centers as $center) {
+            Log::info("CollectorDashboardController::centers - Center ID: {$center->id}, Name: {$center->name}");
+        }
+
+        // Fetch completed requests for the collector that do not have a recycling record
+        $completedRequestsQuery = PickupRequest::where('collector_id', $user->id)
+            ->where('status', 'completed')
+            ->whereDoesntHave('recyclingRecord');
+
+        // Log the raw SQL query
+        Log::info("CollectorDashboardController::centers - Completed requests SQL query: " . $completedRequestsQuery->toSql());
+
+        $completedRequests = $completedRequestsQuery->get();
+
+        // Log the count of completed requests
+        Log::info("CollectorDashboardController::centers - Number of completed requests found: " . $completedRequests->count());
+
+        // Log details of each completed request
+        foreach ($completedRequests as $request) {
+            Log::info("CollectorDashboardController::centers - Request ID: {$request->id}, Quantity: {$request->quantity}, Plastic Type: {$request->plastic_type}");
+        }
+
+        // Log the data being passed to Inertia
+        Log::info("CollectorDashboardController::centers - Data being passed to Inertia:", [
+            'centers' => $centers,
+            'completedRequests' => $completedRequests,
+        ]);
+
+        // Pass data to Inertia
         return Inertia::render('Collector/Centers', [
             'centers' => $centers,
             'completedRequests' => $completedRequests,
